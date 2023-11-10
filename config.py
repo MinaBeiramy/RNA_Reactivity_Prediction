@@ -1,9 +1,9 @@
 # To Add Paths and Configs
 
-DATA_DIR  = "/DATA/stanford-ribonanza-rna-folding"
+DATA_DIR  = "./DATA/stanford-ribonanza-rna-folding"
 SILICO_CSVS = DATA_DIR + '/' + 'supplementary_silico_predictions'
-PREPROSECESSED_DATA = "/DATA/preprocessed"
-SUBMISSIONS = "/DATA/submissions"
+PREPROSECESSED_DATA = "./DATA/preprocessed"
+SUBMISSIONS = "./DATA/submissions"
 
 TRAIN_CSV = DATA_DIR + '/' + "train_data.csv"
 GPN15K_CSV = SILICO_CSVS + '/' + "GPN15k_silico_predictions.csv"

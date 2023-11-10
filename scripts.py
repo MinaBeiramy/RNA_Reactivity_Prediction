@@ -11,9 +11,9 @@ def separate_data(csv_path:str=TRAIN_CSV):
     reactivity_pattern = re.compile('(reactivity_[0-9])')
     reactivity_col_names = [col for col in train_data.columns if(reactivity_pattern.match(col))]
     targets = train_data[reactivity_col_names]
-    train_data = train_data.drop(reactivity_col_names)
-    train_data.write_csv(P_TRAIN_CSV)
-    targets.write_csv(P_TARGETS_CSV)
+    train_data = train_data.drop(columns=reactivity_col_names)
+    train_data.to_csv(P_TRAIN_CSV)
+    targets.to_csv(P_TARGETS_CSV)
 
 
 if __name__ == "__main__":
