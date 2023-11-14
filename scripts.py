@@ -1,6 +1,6 @@
 
 import re
-import numpy as npe
+import numpy as np
 import pandas as pd
 from config import TRAIN_CSV, P_TARGETS_CSV, P_TRAIN_CSV, P_BPP_CSV
 
@@ -11,7 +11,7 @@ def separate_data(csv_path:str=TRAIN_CSV):
     ## Get Clean Data For Main train.csv file
     ## Storing Reactivity columns as Targets and the Rests as Train Data
     ## Creating a Separate file for sequences in Train.csv, incase we only want to train on sequences and not the other attributes
-    ## Filter the dataframe by 'SN_filter' column where the value is 1.0
+    ## Filter the dataframe by 'SN_filter' column where the value is 1.0PP
 
     train_data = pd.read_csv(csv_path)
     print("The Shape of dataset before dropping the duplicates are: ", train_data.shape)
@@ -22,9 +22,9 @@ def separate_data(csv_path:str=TRAIN_CSV):
     train_data['seq_len'] = train_data["sequence"].apply(len)
     reactivity_pattern = re.compile('(reactivity_[0-9])')
     reactivity_col_names = [col for col in train_data.columns if(reactivity_pattern.match(col))]
-    targets = train_data[reactivity_col_names]
-    targets = targets.fillna(0.0)
+    targets = train_data[reactivity_col_names].fillna(0)
     targets['sequence_id'] = train_data['sequence_id']
+    targets[reactivity_col_names].to_numpy(dtype=np.float32)
     train_data = train_data.drop(columns=reactivity_col_names)
     train_data.to_csv(P_TRAIN_CSV)
     targets.to_csv(P_TARGETS_CSV)

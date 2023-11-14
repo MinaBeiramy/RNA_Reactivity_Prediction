@@ -1,4 +1,6 @@
+pip install torch torchvision torchaudio
+pandas
+scikit-learn
 Kaggle #for downloading data form kaggle
 arnie
-forgi
--q git+https://github.com/DasLab/draw_rna.git
+git+https://github.com/DasLab/draw_rna.git
