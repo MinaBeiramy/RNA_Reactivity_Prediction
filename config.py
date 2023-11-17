@@ -40,3 +40,18 @@ PRED_CSV = SUBMISSIONS + '/' + "submission.csv"
 ###### BBP DATA LOADER CONFIG
 ETERNA_BBP_SUB_DIRECTORIES = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
 TRANSFORM = [ToTensor(), Resize((224, 224))]
+
+
+####### TRAIN CONFIG
+# epoch = 15
+#     lr = config['lr']
+#     show_interval = config['show_interval']
+#     valid_interval = config['valid_interval']
+#     save_interval = config['save_interval']
+#     cpu_workers = config['cpu_workers']
+#     reload_checkpoint = config['reload_checkpoint']
+#     valid_max_iter = config['valid_max_iter']
+
+#     img_width = config['img_width']
+#     img_height = config['img_height']
+#     data_dir = config['data_dir']

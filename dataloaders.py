@@ -53,14 +53,15 @@ class CNNDataset(Dataset):
             target_pad_opperation = ConstantPad1d(self.target_pad, 0.0)
 
         
-        self.reactivity = torch.tensor(self.target_df.iloc[idx, :-1].values.astype('float32')).flatten()
+        self.reactivity = torch.Tensor(self.target_df.iloc[idx, :-1].values.astype('float32')).flatten()
 
         self.reactivity = target_pad_opperation(self.reactivity)
         #print('Shape of reactivity: ', self.reactivity.shape)
 
         #self.matrix_path = self.matrix_df[self.matrix_df['sequence_id'] == str(self.sequence_id)]['path'][0]
         self.matrix_path = self.matrix_df.loc[self.matrix_df['sequence_id'] == str(self.sequence_id), 'path'].values[0]
-        self.bpp = torch.tensor(self.load_bpp_to_nparray(self.matrix_path).astype('float32'))
+        self.bpp = torch.Tensor(self.load_bpp_to_nparray(self.matrix_path).astype('float32'))
+        self.bpp = torch.unsqueeze(self.bpp, 0)
 
         # Print
         # print('after function shape:', self.bpp.shape)

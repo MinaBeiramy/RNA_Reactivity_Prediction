@@ -3,4 +3,5 @@ pandas
 scikit-learn
 Kaggle #for downloading data form kaggle
 arnie
+tqdm
 git+https://github.com/DasLab/draw_rna.git
