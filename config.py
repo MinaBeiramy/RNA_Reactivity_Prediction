@@ -2,7 +2,7 @@
 
 from torchvision.transforms import ToTensor, Resize
 
-DATA_DIR  = "./DATA/stanford-ribonanza-rna-folding"
+DATA_DIR  = "./DATA"
 SILICO_CSVS = DATA_DIR + '/' + 'supplementary_silico_predictions'
 PREPROSECESSED_DATA = "./DATA/preprocessed"
 PREPROSECESSED_BPPS = PREPROSECESSED_DATA + '/' + 'bbps'
@@ -10,6 +10,7 @@ ETERNA_PKG_BPP = DATA_DIR + '/' +'Ribonanza_bpp_files/extra_data'
 SUBMISSIONS = "./DATA/submissions"
 
 TRAIN_CSV = DATA_DIR + '/' + "train_data.csv"
+TEST_CSV = DATA_DIR + '/' + "test_sequences.csv"
 GPN15K_CSV = SILICO_CSVS + '/' + "GPN15k_silico_predictions.csv"
 PK90_CSV = SILICO_CSVS + '/' + "PK90_silico_predictions.csv"
 PK50_CSV = SILICO_CSVS + '/' + "PK50_silico_predictions.csv"
@@ -18,7 +19,7 @@ R1_CSV = SILICO_CSVS + '/' + "R1_silico_predictions.csv"
 P_TRAIN_CSV = PREPROSECESSED_DATA + '/' + "p_train_data.csv"
 P_TARGETS_CSV = PREPROSECESSED_DATA + '/' + "p_targets_data.csv"
 P_BPP_CSV = PREPROSECESSED_DATA + '/' + "p_bpp.csv"
-TEST_CSV = PREPROSECESSED_DATA + '/' + "test_sequences.csv"
+P_TEST_CSV = PREPROSECESSED_DATA + '/' + "test_data.csv"
 
 #BPPs
 FORGI_BPP_FILES = PREPROSECESSED_BPPS + '/' + "forgi.pt"
@@ -55,3 +56,8 @@ TRANSFORM = [ToTensor(), Resize((224, 224))]
 #     img_width = config['img_width']
 #     img_height = config['img_height']
 #     data_dir = config['data_dir']
+
+
+##### CHECK POINTS AND LOGGERS
+CRNN_CHK_PNT = './experiments/crnn'
+CRNN_LOG = './experiments/crnn/logs'
