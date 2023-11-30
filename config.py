@@ -2,7 +2,7 @@
 
 from torchvision.transforms import ToTensor, Resize
 
-DATA_DIR  = "./DATA"
+DATA_DIR  = "./DATA/"
 SILICO_CSVS = DATA_DIR + '/' + 'supplementary_silico_predictions'
 PREPROSECESSED_DATA = "./DATA/preprocessed"
 PREPROSECESSED_BPPS = PREPROSECESSED_DATA + '/' + 'bbps'
@@ -31,7 +31,7 @@ FORGI_BPP_FILES = PREPROSECESSED_BPPS + '/' + "forgi.pt"
 P_TRAIN_PARQUET = PREPROSECESSED_DATA + '/' + "p_train_data.parquet"
 P_TARGETS_PARQUET = PREPROSECESSED_DATA + '/' + "p_targets_data.parquet"
 P_BPP_PARQUET = PREPROSECESSED_DATA + '/' + "p_bpp.parquet"
-P_TEST_PARQUET = PREPROSECESSED_DATA + '/' + "test_data.parquet"
+P_TEST_PARQUET = PREPROSECESSED_DATA + '/' + "p_test_data.parquet"
 
 PRED_CSV = SUBMISSIONS + '/' + "submission.csv"
 

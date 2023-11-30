@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import polars as pl
 import os
+import re
 from torchvision.transforms import ToTensor, Compose, Resize, transforms
 from typing import Any
 from config import *
@@ -131,3 +132,75 @@ class CNNDataset(Dataset):
             filled_array[int(row) - 1, int(col) - 1] = value
         
         return filled_array
+
+
+
+class SimpleParquetDataset(Dataset):
+    def __init__(self, parquet_name, train_test_flag:str='train', root=None, transform=None, pre_transform=None, pre_filter=None):
+
+        # Set the Parquet file name
+        self.parquet_name = parquet_name
+        self.train_test_flag = train_test_flag
+
+        # Load the Parquet dataframe
+        self.df = pl.read_parquet(self.parquet_name)
+
+        if self.train_test_flag == 'train':
+        # Get reactivity column names using regular expression
+            reactivity_match = re.compile('(reactivity_[0-9])')
+            reactivity_names = [col for col in self.df.columns if reactivity_match.match(col)]
+            # Select only the reactivity columns
+            self.reactivity_df = self.df.select(reactivity_names)
+        
+        # Select the 'sequence' column
+        self.sequence_df = self.df.select(["sequence","path"])
+        self.max_len = 224 # max len of seq is 207, therefore a fixed len will of 224 will be chosen for bpp matrix
+
+    def __getitem__(self, idx):
+        # Read the row at the given index
+        sequence_row = self.sequence_df.row(idx)[0]
+        bpp_path_row = self.sequence_df.row(idx)[1]
+
+        sequence = np.array(list(sequence_row[0])).reshape(-1, 1)
+        sequence_length = len(sequence)
+
+        # Replace nan values for reactivity with 0.0 (not super important as they get masked)
+        data = self.load_bpp_to_nparray(bpp_path_row).astype('float32')
+        data = torch.Tensor(data)
+        data = torch.unsqueeze(data, 0)
+        
+        # Define data and targets
+        if self.train_test_flag =='train':
+            reactivity_row = self.reactivity_df.row(idx)
+            reactivity = np.array(reactivity_row, dtype=np.float32)[0:sequence_length]
+            reactivity = np.nan_to_num(reactivity, copy=False, nan=0.0)
+            targets = torch.Tensor(reactivity)
+
+            return data, targets
+        
+        elif self.train_test_flag == 'test':
+            return data
+
+    def __len__(self):
+        # 📏 Return the length of the dataset
+        return len(self.sequence_df)
+
+    def load_bpp_to_nparray(self, bpp_file):
+
+        # Load the data from the file
+        data = np.loadtxt(bpp_file)
+
+        # Create an empty array filled with zeros
+        filled_array = np.zeros((self.max_len, self.max_len))
+
+        # Fill the values from the loaded data into the empty array
+        for row, col, value in data:
+            filled_array[int(row) - 1, int(col) - 1] = value
+        
+        return filled_array
+
+    def get(self, idx):
+        # 📊 Get and parse data for the specified index
+        data = self.parse_row(idx)
+        return data
+    

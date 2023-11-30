@@ -25,8 +25,9 @@ def list_files_in_directory(read_path:str=ETERNA_PKG_BPP, save_path:str=P_BPP_CS
     matrix_df = pd.DataFrame(columns=['sequence_id', 'path'])
     matrix_df['sequence_id'] = file_names
     matrix_df['path'] = file_paths
-    matrix_df.drop_duplicates(subset=['sequence_id'], inplace=True)
+    #matrix_df.drop_duplicates(subset=['sequence_id'], inplace=True)
     matrix_df.to_csv(save_path)
+    print('********* BPP path files have been successfully saved in /DATA/preprocessed/p_bpp.csv**********')
     #return matrix_df
 
 
@@ -47,11 +48,12 @@ def to_parquet(read_path:str, save_path:str, bpp_path:str=None):
 
     # 📊 Read CSV data with the new schema and write to Parquet
     df = pl.scan_csv(read_path, schema=new_schema)
-    df = df.filter(pl.col('SN_filter') == 1) 
-    df = df.unique(subset=["sequence_id"])
-    df = df.with_columns(seq_len = pl.col("sequence").list.lengths())
+    if 'SN_filter' in df.columns:
+        df = df.filter(pl.col('SN_filter') == 1) 
+    #df = df.unique(subset=["sequence_id"])
+    df = df.with_columns(seq_len = pl.col("sequence").str.len_bytes().alias("seq_lengths"))
     df = df.join(bpp_df, on='sequence_id', how='left')
-
+    
 
     # 💾 Write data to Parquet format with specified settings
     df.sink_parquet(
@@ -107,11 +109,14 @@ def clean_eterana_bpp_files(P_BPP_CSV):
 if __name__ == "__main__":
     ## Uncomment steps if necessary
     #step 1:
-    list_files_in_directory()
+    #list_files_in_directory()
+    #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV)
+    to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET, bpp_path=P_BPP_CSV)
+
 
     #Step 2: 
-    separate_data()
-    separate_data(test_train_flag='test', csv_path=TEST_CSV)
+    #separate_data()
+    #separate_data(test_train_flag='test', csv_path=TEST_CSV)
 
     #Step 3:
     #get_bpp()
