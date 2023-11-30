@@ -1,11 +1,64 @@
 
+import os
 import re
 import numpy as np
 import pandas as pd
-from config import TRAIN_CSV, P_TARGETS_CSV, P_TRAIN_CSV, P_BPP_CSV, P_TEST_CSV, TEST_CSV
+from config import  *
+import polars as pl  # 📊 Polars for data manipulation
 
 #TODO make a script to download the data
 
+
+def list_files_in_directory(read_path:str=ETERNA_PKG_BPP, save_path:str=P_BPP_CSV):
+
+    file_paths = []
+    file_names = []
+    for root, dirs, files in os.walk(ETERNA_PKG_BPP):
+        for file in files:
+            if file.endswith('.txt'):
+                path = os.path.join(root, file)
+                normalised = os.path.normpath(path)
+                file_paths.append(normalised)
+                # getting the name of sequence 
+                file_names.append(file[:-4])
+
+    matrix_df = pd.DataFrame(columns=['sequence_id', 'path'])
+    matrix_df['sequence_id'] = file_names
+    matrix_df['path'] = file_paths
+    matrix_df.drop_duplicates(subset=['sequence_id'], inplace=True)
+    matrix_df.to_csv(save_path)
+    #return matrix_df
+
+
+def to_parquet(read_path:str, save_path:str, bpp_path:str=None):
+    # 📊 Read CSV data using Polars
+    dummy_df = pl.scan_csv(read_path)
+
+    if bpp_path:
+        bpp_df = pl.scan_csv(bpp_path)
+
+    # 🔍 Define a new schema mapping for specific columns
+    new_schema = {}
+    for key, value in dummy_df.schema.items():
+        if key.startswith("reactivity"):
+            new_schema[key] = pl.Float32  # 📊 Convert 'reactivity' columns to Float32
+        else:            
+            new_schema[key] = value
+
+    # 📊 Read CSV data with the new schema and write to Parquet
+    df = pl.scan_csv(read_path, schema=new_schema)
+    df = df.filter(pl.col('SN_filter') == 1) 
+    df = df.unique(subset=["sequence_id"])
+    df = df.with_columns(seq_len = pl.col("sequence").list.lengths())
+    df = df.join(bpp_df, on='sequence_id', how='left')
+
+
+    # 💾 Write data to Parquet format with specified settings
+    df.sink_parquet(
+        save_path,
+        compression='uncompressed',  # No compression for easy access
+        row_group_size=10,  # Adjust row group size as needed
+    )
 
 def separate_data(csv_path:str=TRAIN_CSV, test_train_flag:str='train'):
     ## Get Clean Data For Main train.csv file
@@ -53,9 +106,11 @@ def clean_eterana_bpp_files(P_BPP_CSV):
 
 if __name__ == "__main__":
     ## Uncomment steps if necessary
+    #step 1:
+    list_files_in_directory()
 
     #Step 2: 
-    #separate_data()
+    separate_data()
     separate_data(test_train_flag='test', csv_path=TEST_CSV)
 
     #Step 3:

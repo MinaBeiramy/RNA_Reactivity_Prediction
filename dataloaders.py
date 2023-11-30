@@ -4,14 +4,24 @@ from torch.nn import ConstantPad1d, ConstantPad2d
 from sklearn.preprocessing import OneHotEncoder
 import pandas as pd
 import numpy as np
+import polars as pl
 import os
 from torchvision.transforms import ToTensor, Compose, Resize, transforms
 from typing import Any
-from config import ETERNA_BBP_SUB_DIRECTORIES, P_TRAIN_CSV, P_TARGETS_CSV, ETERNA_PKG_BPP, P_TEST_CSV
+from config import *
 
 
 class CNNDataset(Dataset):
-    def __init__(self, train_test_flag:str='train', data_csv=P_TRAIN_CSV, target_csv=P_TARGETS_CSV, sub_directories=ETERNA_BBP_SUB_DIRECTORIES, root=None,  matrix_dir=ETERNA_PKG_BPP):
+    def __init__(
+            self, 
+            train_test_flag:str='train', 
+            data_csv=P_TRAIN_CSV, 
+            target_csv=P_TARGETS_CSV,
+            bpp_csv= P_BPP_CSV,
+            sub_directories=ETERNA_BBP_SUB_DIRECTORIES, 
+            root=None,  
+            matrix_dir=ETERNA_PKG_BPP
+        ):
         #super().__init__(root)
         #  Set the csv file name
         self.transform = transforms.Compose([
@@ -24,7 +34,7 @@ class CNNDataset(Dataset):
         self.sequence_df = self.df["sequence"]
         self.matrix_dir = matrix_dir
         self.sub_directories = sub_directories
-        self.matrix_df = self.list_files_in_directory()
+        self.matrix_df = bpp_csv
 
 
         if self.train_test_flag == 'train':
@@ -108,25 +118,6 @@ class CNNDataset(Dataset):
             return len(self.matrix_df)
 
     
-    def list_files_in_directory(self):
-
-        file_paths = []
-        file_names = []
-        for root, dirs, files in os.walk(ETERNA_PKG_BPP):
-            for file in files:
-                if file.endswith('.txt'):
-                    path = os.path.join(root, file)
-                    normalised = os.path.normpath(path)
-                    file_paths.append(normalised)
-                    # getting the name of sequence 
-                    file_names.append(file[:-4])
-
-        matrix_df = pd.DataFrame(columns=['sequence_id', 'path'])
-        matrix_df['sequence_id'] = file_names
-        matrix_df['path'] = file_paths
-        matrix_df.drop_duplicates(subset=['sequence_id'], inplace=True)
-        return matrix_df
-    
     def load_bpp_to_nparray(self, bpp_file):
 
         # Load the data from the file
@@ -140,5 +131,3 @@ class CNNDataset(Dataset):
             filled_array[int(row) - 1, int(col) - 1] = value
         
         return filled_array
-
-

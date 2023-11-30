@@ -27,13 +27,11 @@ FORGI_BPP_FILES = PREPROSECESSED_BPPS + '/' + "forgi.pt"
 
 # In case of loading data with parquets, uncomment below:
 
-# TRAIN_PARQUET_FILE = "train_data.parquet"
-# TEST_CSV = DATA_DIR + '/' + "test_sequences.csv"  
-# PK50_PARQUET_FILE = "pk50.parquet"
-# GPN15K_PARQUET_FILE = "gpn15k.parquet"
-# PK90_PARQUET_FILE = "pk90.parquet"
-# R1_PARQUET_FILE = "r1.parquet"
-# TEST_PARQUET_FILE = "test_sequences.parquet"
+
+P_TRAIN_PARQUET = PREPROSECESSED_DATA + '/' + "p_train_data.parquet"
+P_TARGETS_PARQUET = PREPROSECESSED_DATA + '/' + "p_targets_data.parquet"
+P_BPP_PARQUET = PREPROSECESSED_DATA + '/' + "p_bpp.parquet"
+P_TEST_PARQUET = PREPROSECESSED_DATA + '/' + "test_data.parquet"
 
 PRED_CSV = SUBMISSIONS + '/' + "submission.csv"
 
