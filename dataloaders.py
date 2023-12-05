@@ -154,53 +154,92 @@ class SimpleParquetDataset(Dataset):
         
         # Select the 'sequence' column
         self.sequence_df = self.df.select(["sequence","path"])
-        self.max_len = 224 # max len of seq is 207, therefore a fixed len will of 224 will be chosen for bpp matrix
+        self.max_len = 512 # max len of seq is 207, therefore a fixed len will of 224 will be chosen for bpp matrix
 
     def __getitem__(self, idx):
         # Read the row at the given index
         sequence_row = self.sequence_df.row(idx)[0]
         bpp_path_row = self.sequence_df.row(idx)[1]
+        #seq_len_row = self.sequence_df.row(idx)[2]
 
         sequence = np.array(list(sequence_row[0])).reshape(-1, 1)
         sequence_length = len(sequence)
 
         # Replace nan values for reactivity with 0.0 (not super important as they get masked)
-        data = self.load_bpp_to_nparray(bpp_path_row).astype('float32')
-        data = torch.Tensor(data)
+        #data = self.load_bpp_to_tensor(bpp_path_row).astype('float32')
+        data = self.load_bpp_to_tensor(bpp_path_row)
+        #data = torch.Tensor(data)
         data = torch.unsqueeze(data, 0)
+
+        # Define Target padding
+        self.target_pad = int((self.max_len - sequence_length) / 2)
+        
+        if self.target_pad % 2 == 1:
+            target_pad_opperation = ConstantPad1d((self.target_pad, self.target_pad +1), 0.0)
+        elif self.target_pad % 2 == 0:
+            target_pad_opperation = ConstantPad1d(self.target_pad, 0.0)
+
+        # Define the Target Mask
+        target_mask = torch.zeros(512)
+        target_mask[self.target_pad:self.target_pad + sequence_length] = 1.
+    
         
         # Define data and targets
         if self.train_test_flag =='train':
+           
             reactivity_row = self.reactivity_df.row(idx)
             reactivity = np.array(reactivity_row, dtype=np.float32)[0:sequence_length]
-            reactivity = np.nan_to_num(reactivity, copy=False, nan=0.0)
+            print(np.unique(reactivity))
+            # reactivity = np.nan_to_num(reactivity, copy=False, nan=0.0)
+            #reactivity = np.array(reactivity_row)[0:sequence_length]
             targets = torch.Tensor(reactivity)
+            print(targets.unique())
 
-            return data, targets
+
+            # Pad the targets with 0 
+            targets = target_pad_opperation(targets)
+
+            # Mask the nan values in targets
+            nan_values = torch.where(torch.isnan(targets))[0]
+            #print(nan_values)
+            target_mask[nan_values] = 0.
+
+            return data, targets, target_mask
         
         elif self.train_test_flag == 'test':
-            return data
+            return data, target_mask
 
     def __len__(self):
         # 📏 Return the length of the dataset
         return len(self.sequence_df)
 
-    def load_bpp_to_nparray(self, bpp_file):
+    # def load_bpp_to_nparray(self, bpp_file):
 
-        # Load the data from the file
-        data = np.loadtxt(bpp_file)
+    #     # Load the data from the file
+    #     data = np.loadtxt(bpp_file)
 
-        # Create an empty array filled with zeros
-        filled_array = np.zeros((self.max_len, self.max_len))
+    #     # Create an empty array filled with zeros
+    #     filled_array = np.zeros((512, 512))
 
-        # Fill the values from the loaded data into the empty array
-        for row, col, value in data:
-            filled_array[int(row) - 1, int(col) - 1] = value
+    #     # Fill the values from the loaded data into the empty array
+    #     for row, col, value in data:
+    #         filled_array[int(row) - 1, int(col) - 1] = value
+    #     filled_array = np.where(filled_array == 0., 'mask', filled_array)
         
-        return filled_array
+    #     return filled_array
 
-    def get(self, idx):
-        # 📊 Get and parse data for the specified index
-        data = self.parse_row(idx)
-        return data
+    def load_bpp_to_tensor(self, bpp_file):
+        data = torch.from_numpy(np.loadtxt(bpp_file).T)
+        init = torch.zeros(512, 512, dtype=torch.float64)
+        #init = torch.where(init == 0, float("-inf"), 0).to(torch.float64)
+        x = (data[1] - 1).to(torch.int64)
+        y = (data[0] - 1).to(torch.int64)
+        init[y, x] = data[2]
+        return init.to(torch.float32)
+        #return init
+
+    # def get(self, idx):
+    #     # 📊 Get and parse data for the specified index
+    #     data = self.parse_row(idx)
+    #     return data
     
