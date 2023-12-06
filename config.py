@@ -26,19 +26,13 @@ FORGI_BPP_FILES = PREPROSECESSED_BPPS + '/' + "forgi.pt"
 
 
 # In case of loading data with parquets, uncomment below:
-
-
 P_TRAIN_PARQUET = PREPROSECESSED_DATA + '/' + "p_train_data.parquet"
+P_TRAIN_PARQUET_QUICK = PREPROSECESSED_DATA + '/' + "p_train_data_quick.parquet"
 P_TARGETS_PARQUET = PREPROSECESSED_DATA + '/' + "p_targets_data.parquet"
 P_BPP_PARQUET = PREPROSECESSED_DATA + '/' + "p_bpp.parquet"
 P_TEST_PARQUET = PREPROSECESSED_DATA + '/' + "p_test_data.parquet"
 
 PRED_CSV = SUBMISSIONS + '/' + "submission.csv"
-
-
-###### BBP DATA LOADER CONFIG
-ETERNA_BBP_SUB_DIRECTORIES = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
-TRANSFORM = [ToTensor(), Resize((224, 224))]
 
 
 ####### TRAIN CONFIG
