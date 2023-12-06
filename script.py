@@ -1,8 +1,9 @@
 import os
+import argparse
 from config import *
 import torch
 from dataloaders.crnn_dataloader import *
-from trainers.trainers import CNNTrainer
+from trainers.cnn_trainer import CNNTrainer
 from torch.utils.data import random_split, DataLoader
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -10,6 +11,14 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 
 
 def main():
+    # Argparser
+    parser = argparse.ArgumentParser(description='Train Script for RNA REACTIVITY')
+    parser.add_argument('--model_name', help='Choose from existing models, ex:crnn')
+    # TODO: ADD MORE arguments as we go
+    
+
+    args = parser.parse_args()
+    
     # Load the Dataset
     train_val_dataset = ParquetCRNNDataset(P_TRAIN_PARQUET_QUICK)
     test_dataset = InferenceParquetCRNNDataset(P_TEST_PARQUET)
@@ -26,7 +35,8 @@ def main():
     test_dataloader = DataLoader(test_dataset, batch_size=16, shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True)
 
     # Chose the Trainer and the model you want to train
-    model = CNNTrainer("crnn")
+    if args.model_name == 'crnn':
+        model = CNNTrainer("crnn")
 
     #Check point and logger
     checkpoint_callback = ModelCheckpoint(
@@ -51,5 +61,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
