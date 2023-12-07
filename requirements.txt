@@ -8,4 +8,5 @@ arnie
 tqdm
 tensorboard
 tensorboardX
+torch_geometric
 git+https://github.com/DasLab/draw_rna.git

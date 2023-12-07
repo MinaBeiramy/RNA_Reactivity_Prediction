@@ -40,7 +40,7 @@ class SimpleGraphDataset(Dataset):
         encoded_sequence = self.node_encoder.transform(sequence)
 
         # 📊 Get the edge index using nearest adjacency function
-        edges_np = self.nearest_adjacency(seq_len_row, n=self.edge_distance, loops=False)
+        edges_np = self.nearest_adjacency(seq_len_row, False)
         # 📏 Convert the edge index to a torch tensor
         edge_index = torch.tensor(edges_np, dtype=torch.long)
         # 🧬 Get reactivity targets for nodes
@@ -67,10 +67,11 @@ class SimpleGraphDataset(Dataset):
         data = self.parse_row(idx)
         return data
     
-    def nearest_adjacency(sequence_length, n=2, loops=True):
+    def nearest_adjacency(self, sequence_length , loops):
         base = np.arange(sequence_length)
         connections = []
-
+        n=self.edge_distance
+        
         for i in range(-n, n + 1):
             if i == 0 and not loops:
                 continue
@@ -121,7 +122,7 @@ class InferenceGraphDataset(Dataset):
         # 📏 Get the sequence length
         sequence_length = len(sequence)
         # 📊 Get the edge index using nearest adjacency function
-        edges_np = self.nearest_adjacency(sequence_length, n=self.edge_distance, loops=False)
+        edges_np = self.nearest_adjacency(sequence_length, False)
         # 📏 Convert the edge index to a torch tensor
         edge_index = torch.tensor(edges_np, dtype=torch.long)
 
@@ -142,10 +143,10 @@ class InferenceGraphDataset(Dataset):
         data = self.parse_row(idx)
         return data
     
-    def nearest_adjacency(sequence_length, n=2, loops=True):
+    def nearest_adjacency(self, sequence_length, loops):
         base = np.arange(sequence_length)
         connections = []
-
+        n = self.edge_distance
         for i in range(-n, n + 1):
             if i == 0 and not loops:
                 continue
