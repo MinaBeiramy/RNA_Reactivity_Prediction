@@ -4,7 +4,6 @@ import numpy as np
 import polars as pl
 from torch_geometric.data import Data, Dataset
 ## pytorch geometric .loader for loading graph data in batch
-from torch_geometric.loader import DataLoader
 from sklearn.preprocessing import OneHotEncoder
 
 class SimpleGraphDataset(Dataset):
@@ -35,7 +34,7 @@ class SimpleGraphDataset(Dataset):
         seq_len_row = self.sequence_df.row(idx)[1]
         reactivity_row = self.reactivity_df.row(idx)
         # 🧬 Get the sequence string and convert it to an array
-        sequence = np.array(list(sequence_row[0])).reshape(-1, 1)
+        sequence = np.array(list(sequence_row)).reshape(-1, 1)
         # 🧬 Encode the sequence array using the one-hot encoder
         encoded_sequence = self.node_encoder.transform(sequence)
 
@@ -57,6 +56,7 @@ class SimpleGraphDataset(Dataset):
         # 📊 Create a PyTorch Data object
         data = Data(x=node_features, edge_index=edge_index, y=targets, valid_mask=torch_valid_mask)
         return data
+        #return node_features, edge_index, targets, torch_valid_mask
 
     def len(self):
         # 📏 Return the length of the dataset
@@ -107,32 +107,34 @@ class InferenceGraphDataset(Dataset):
         # 📊 Load the Parquet dataframe
         self.df = pl.read_parquet(self.parquet_name)
         # 📊 Select the 'sequence' and 'id_min' columns
-        self.sequence_df = self.df.select("sequence")
+        self.sequence_df = self.df.select(["sequence", "seq_len"])
         self.id_min_df = self.df.select("id_min")
 
     def parse_row(self, idx):
         # 📊 Read the row at the given index
-        sequence_row = self.sequence_df.row(idx)
+        sequence_row = self.sequence_df.row(idx)[0]
+        seq_len_row = self.sequence_df.row(idx)[1]
         id_min = self.id_min_df.row(idx)[0]
 
         # 🧬 Get the sequence string and convert it to an array
-        sequence = np.array(list(sequence_row[0])).reshape(-1, 1)
+        sequence = np.array(list(sequence_row)).reshape(-1, 1)
         # 🧬 Encode the sequence array using the one-hot encoder
         encoded_sequence = self.node_encoder.transform(sequence)
         # 📏 Get the sequence length
         sequence_length = len(sequence)
         # 📊 Get the edge index using nearest adjacency function
-        edges_np = self.nearest_adjacency(sequence_length, False)
+        edges_np = self.nearest_adjacency(seq_len_row, False)
         # 📏 Convert the edge index to a torch tensor
         edge_index = torch.tensor(edges_np, dtype=torch.long)
 
         # 📊 Define node features as the one-hot encoded sequence
         node_features = torch.Tensor(encoded_sequence)
-        ids = torch.arange(id_min, id_min+sequence_length, 1)
+        ids = torch.arange(id_min, id_min+seq_len_row, 1)
 
         data = Data(x=node_features, edge_index=edge_index, ids=ids)
-
         return data
+        #return node_features, edge_index, ids
+
 
     def len(self):
         # 📏 Return the length of the dataset
@@ -167,4 +169,50 @@ class InferenceGraphDataset(Dataset):
 
         # Combine connections horizontally
         return np.hstack(connections)
+
+
+
+# import os
+# import argparse
+# from ..config import *
+# import torch
+# from dataloaders.crnn_dataloader import *
+# from trainers.cnn_trainer import CNNTrainer
+# from trainers.gnn_trainer import GNNTrainer
+# from torch.utils.data import random_split, DataLoader
+# from pytorch_lightning import Trainer
+# from pytorch_lightning.loggers import TensorBoardLogger
+# from pytorch_lightning.callbacks import ModelCheckpoint
+
+# model = GNNTrainer("edgecnn", edge_distance=4)
+# train_val_dataset = SimpleGraphDataset(P_TRAIN_PARQUET_QUICK, edge_distance=4)
+# test_dataset = InferenceGraphDataset(P_TEST_PARQUET, edge_distance=4)
+# log = EDGECNN_LOG
+# chk_pnt = EDGECNN_CHK_PNT
+
+# generator1 = torch.Generator().manual_seed(42)
+# train_dataset, val_dataset = random_split(train_val_dataset, [0.7, 0.3], generator1)
     
+# train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True)  
+# val_dataloader = DataLoader(val_dataset, batch_size=16, shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True)
+# test_dataloader = DataLoader(test_dataset, batch_size=16, shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True)
+
+# # Chose the Trainer and the model you want to train
+
+
+# #Check point and logger
+# checkpoint_callback = ModelCheckpoint(
+#             dirpath=chk_pnt,
+#             monitor='val_loss',
+#             save_top_k=1,
+#             filename='best-{epoch}-{val_loss:.2f}'
+#         )
+
+# logger = TensorBoardLogger(save_dir=log, name=f"{args.num_epoch}epoch_{args.model_name}", version=1)
+# #logger = TensorBoardLogger(save_dir=log, name=f"1epoch_edgecnn", version=1)
+
+
+
+# # fit the model
+# pl_trainer = Trainer(max_epochs = 1, accelerator='gpu', devices=1, precision="16-mixed", default_root_dir=chk_pnt)
+# pl_trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader)

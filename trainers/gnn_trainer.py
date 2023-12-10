@@ -2,18 +2,20 @@ import torch
 import pytorch_lightning as pl
 #from torchmetrics.regression import F1Score, AUROC, Recall, ROC, Accuracy, Precision, Specificity 
 from torch_geometric.nn.models import EdgeCNN
+import numpy as np
 
 class GNNTrainer(pl.LightningModule):
     def __init__(
         self,
         model_name,
+        num_channels,
+        num_features,
         edge_distance=4,
         weights=None,
         learning_rate=0.001,
         weight_decay=1e-4,
         gamma=2,
-        num_features=128,
-        num_channels = 128,
+        
     ):
         """Initialize with pretrained weights instead of None if a pretrained model is required."""
         super().__init__()
@@ -82,7 +84,7 @@ class GNNTrainer(pl.LightningModule):
     #     specifity = self.specifity(y_pred, y_true)
     #     return accuracy
 
-    def forward(self, inputs):
+    def  forward(self, inputs):
         output = self.model(inputs.x, inputs.edge_index)
         #print(output)
         return output
@@ -126,6 +128,32 @@ class GNNTrainer(pl.LightningModule):
 
 
         return loss
+    # def training_step(self, batch, batch_idx):
+    #     inputs = batch
+        
+
+    #     y_pred = self.forward(inputs)
+    #     y_pred = torch.squeeze(y_pred)
+    #     #print(mask.unique())
+    #     #print(y_pred.unique())       
+    #     # loss
+
+    #     # y_true = y_true.unsqueeze(-1)
+    #     # y_true = y_true * mask.unsqueeze(-1) 
+    #     loss = self.loss_fn(y_pred[mask], y[mask])
+
+    #     # accuracy = self._metrics(y_pred, y_true)
+
+    #     self.training_step_losses.append(loss)
+    #     # self.training_step_accuracy.append(accuracy)
+
+    #     self.log("train_loss", loss, prog_bar=True, on_step=True)
+    #     # self.log("train_accuracy", accuracy, prog_bar=True, on_step=True)
+    #     # self.log("train_auroc", auroc, prog_bar=False, on_step=True)
+    #     # self.log("train_precision", precision, prog_bar=False, on_step=True)
+    #     # self.log("train_recall", recall, prog_bar=False, on_step=True)
+    #     # self.log("train_f1", f1, prog_bar=False, on_step=True)
+    #     # self.log("train_specifity", specifity, prog_bar=False, on_step=True)
 
     def on_train_epoch_end(self):
         avg_loss = torch.stack(self.training_step_losses).mean()
@@ -198,7 +226,8 @@ class GNNTrainer(pl.LightningModule):
     def predict_step(self, batch, batch_idx):
         inputs = batch
         y_pred = self.forward(inputs)
-        #ids = np.append(ids, batch.ids.detach().cpu().numpy())
-        #preds = np.append(preds, out)
+        y_pred = torch.squeeze(y_pred)
+        # ids = np.append(ids, batch.ids.detach().cpu().numpy())
+        # preds = np.append(preds, out)
 
         return y_pred
