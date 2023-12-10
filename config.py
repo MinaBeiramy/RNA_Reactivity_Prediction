@@ -53,3 +53,6 @@ PRED_CSV = SUBMISSIONS + '/' + "submission.csv"
 ##### CHECK POINTS AND LOGGERS
 CRNN_CHK_PNT = './experiments/crnn'
 CRNN_LOG = './experiments/crnn/logs'
+
+EDGECNN_CHK_PNT = './experiments/edgecnn'
+EDGECNN_LOG = './experiments/edgecnn/logs'
