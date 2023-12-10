@@ -58,7 +58,6 @@ def main():
     
     #Predictions
     y_pred = pl_trainer.predict(model=model, dataloaders=test_dataloader)
-    y_pred = pl_trainer.predict(model=model, dataloaders=test_dataloader)
 
     #Save the predictions
     return y_pred
