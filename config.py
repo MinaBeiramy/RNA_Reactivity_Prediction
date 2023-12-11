@@ -1,7 +1,5 @@
 # To Add Paths and Configs
 
-from torchvision.transforms import ToTensor, Resize
-
 DATA_DIR  = "./DATA/"
 SILICO_CSVS = DATA_DIR + '/' + 'supplementary_silico_predictions'
 PREPROSECESSED_DATA = "./DATA/preprocessed"
@@ -56,3 +54,9 @@ CRNN_LOG = './experiments/crnn/logs'
 
 EDGECNN_CHK_PNT = './experiments/edgecnn'
 EDGECNN_LOG = './experiments/edgecnn/logs'
+
+GRAPHORMER_CHK_PNT = './experiments/edgecnn'
+GRAPHORMER_LOG = './experiments/edgecnn/logs'
+
+##### Saving Predictions
+PREDICTION = "lightning_logs/version_0"

@@ -1,6 +1,14 @@
-#pip install torch torchvision torchaudio
+### Python Version 3.11
+### Cuda version 11.8
+
+#Uncomment for mac
+#torch torchvision torchaudio
+
+# Other Requirements
+torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu118
 pandas
 polars
+lightning
 pyarrow
 scikit-learn    
 Kaggle #for downloading data form kaggle

@@ -17,16 +17,25 @@ def main():
     parser = argparse.ArgumentParser(description='Train Script for RNA REACTIVITY')
     parser.add_argument('-m', '--model_name', help='Choose from existing models, ex:edgecnn')
     parser.add_argument('-e', '--num_epoch', help='Number of Epochs')
+    parser.add_argument('-v', '--version', help='Your model version number for logging and saving')
+
 
     # # TODO: ADD MORE arguments as we go
     args = parser.parse_args()
     
     if args.model_name == 'edgecnn':
-        model = model = GNNTrainer("edgecnn", num_features=train_val_dataset.num_features, num_channels=4)
-        train_val_dataset = SimpleGraphDataset(P_TRAIN_PARQUET_QUICK, edge_distance=4)
+        train_val_dataset = SimpleGraphDataset(P_TRAIN_PARQUET, edge_distance=4)
         test_dataset = InferenceGraphDataset(P_TEST_PARQUET, edge_distance=4)
+        model = model = GNNTrainer("edgecnn", num_features=train_val_dataset.num_features, num_channels=4)
         log = EDGECNN_LOG
         chk_pnt = EDGECNN_CHK_PNT
+    
+    elif args.model_name == 'graphormer':
+        train_val_dataset = SimpleGraphDataset(P_TRAIN_PARQUET_QUICK, edge_distance=4)
+        test_dataset = InferenceGraphDataset(P_TEST_PARQUET, edge_distance=4)
+        model = model = GNNTrainer("graphormer", num_features=train_val_dataset.num_features, num_channels=4)
+        log = GRAPHORMER_LOG
+        chk_pnt = GRAPHORMER_CHK_PNT
     
 
     # Randomly split the data into train and validation datasets
@@ -55,13 +64,15 @@ def main():
 
     # fit the model
     pl_trainer = Trainer(max_epochs = int(args.num_epoch), accelerator='gpu', devices=1, precision="16-mixed", default_root_dir=chk_pnt)
+    #Uncomment for Mac
+    #pl_trainer = Trainer(max_epochs = 1, accelerator='cpu', devices=1, default_root_dir=EDGECNN_CHK_PNT)
     pl_trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader)
     
     #Predictions
     y_pred = pl_trainer.predict(model=model, dataloaders=test_dataloader)
 
     #Save the predictions
-    return y_pred
+    torch.save(y_pred, f"{chk_pnt}/lightning_logs/version_{args.version}/predictions.py")
 
 if __name__ == "__main__":
     main()

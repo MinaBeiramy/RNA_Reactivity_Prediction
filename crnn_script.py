@@ -15,6 +15,7 @@ def main():
     parser = argparse.ArgumentParser(description='Train Script for RNA REACTIVITY')
     parser.add_argument('-m', '--model_name', help='Choose from existing models, ex:crnn, edgecnn')
     parser.add_argument('-e', '--num_epoch', help='Number of Epochs')
+    parser.add_argument('-v', '--version', help='Your model version number for logging and saving')
 
     # # TODO: ADD MORE arguments as we go
     args = parser.parse_args()
@@ -22,7 +23,7 @@ def main():
     # # Based on model , Load the Datasets
     if args.model_name == 'crnn':
         model = CNNTrainer("crnn")
-        train_val_dataset = ParquetCRNNDataset(P_TRAIN_PARQUET_QUICK)
+        train_val_dataset = ParquetCRNNDataset(P_TRAIN_PARQUET)
         test_dataset = InferenceParquetCRNNDataset(P_TEST_PARQUET)
         log = CRNN_LOG
         chk_pnt = CRNN_CHK_PNT
@@ -60,7 +61,7 @@ def main():
     y_pred = pl_trainer.predict(model=model, dataloaders=test_dataloader)
 
     #Save the predictions
-    return y_pred
+    torch.save(y_pred, f"{chk_pnt}/lightning_logs/version_{args.version}/predictions.py")
 
 if __name__ == "__main__":
     main()

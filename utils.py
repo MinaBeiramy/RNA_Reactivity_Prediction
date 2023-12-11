@@ -31,6 +31,29 @@ def list_files_in_directory(read_path:str=ETERNA_PKG_BPP, save_path:str=P_BPP_CS
     #return matrix_df
 
 
+def setup_directories():
+  
+    # Directory 
+    directory = "DATA"
+    
+    # Parent Directory path 
+    parent_dir = os.getcwd()
+    
+    # Path 
+    path = os.path.join(parent_dir, directory) 
+    if not os.path.exists(path):
+    
+        os.mkdir(path) 
+        print("Directory '% s' created" % directory) 
+        
+        # Directory 
+        directory = "preprocessed"
+
+        # Path 
+        path = os.path.join(path, directory) 
+        os.mkdir(path)
+        print("Directory '% s' created" % directory) 
+
 def to_parquet(read_path:str, save_path:str, bpp_path:str=None):
     # 📊 Read CSV data using Polars
     dummy_df = pl.scan_csv(read_path)
@@ -46,7 +69,6 @@ def to_parquet(read_path:str, save_path:str, bpp_path:str=None):
         else:            
             new_schema[key] = value
 
-    # 📊 Read CSV data with the new schema and write to Parquet
     df = pl.scan_csv(read_path, schema=new_schema)
     if 'SN_filter' in df.columns:
         df = df.filter(pl.col('SN_filter') == 1) 
@@ -106,16 +128,9 @@ def separate_data(csv_path:str=TRAIN_CSV, test_train_flag:str='train'):
 if __name__ == "__main__":
     ## Uncomment steps if necessary
     #step 1:
+    #
+    setup_directories()
     #list_files_in_directory()
     #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV)
     #to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET, bpp_path=P_BPP_CSV)
-    to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET_QUICK, bpp_path=P_BPP_CSV)
-
-
-
-    #Step 2: 
-    #separate_data()
-    #separate_data(test_train_flag='test', csv_path=TEST_CSV)
-
-    #Step 3:
-    #get_bpp()
+    #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET_QUICK, bpp_path=P_BPP_CSV)
