@@ -18,6 +18,10 @@ def main():
     parser.add_argument('-m', '--model_name', help='Choose from existing models, ex:edgecnn')
     parser.add_argument('-e', '--num_epoch', help='Number of Epochs')
     parser.add_argument('-v', '--version', help='Your model version number for logging and saving')
+    parser.add_argument('-b', '--batch_size', help='Batch size for train-test', default=16)
+    parser.add_argument('-p', '--precision', help='Train Precision Type', default='bf16')
+
+
 
 
     # # TODO: ADD MORE arguments as we go
@@ -26,7 +30,7 @@ def main():
     if args.model_name == 'edgecnn':
         train_val_dataset = SimpleGraphDataset(P_TRAIN_PARQUET, edge_distance=4)
         test_dataset = InferenceGraphDataset(P_TEST_PARQUET, edge_distance=4)
-        model = model = GNNTrainer("edgecnn", num_features=train_val_dataset.num_features, num_channels=4)
+        model = model = GNNTrainer("edgecnn", num_features=train_val_dataset.num_features, num_channels=4, batch_size=int(args.batch_size))
         log = EDGECNN_LOG
         chk_pnt = EDGECNN_CHK_PNT
     
@@ -44,9 +48,9 @@ def main():
     
 
     # DATALOADER
-    train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True)  
-    val_dataloader = DataLoader(val_dataset, batch_size=16, shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=16, shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=int(args.batch_size), shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True)  
+    val_dataloader = DataLoader(val_dataset, batch_size=int(args.batch_size), shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=int(args.batch_size), shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True)
 
     # Chose the Trainer and the model you want to train
 
@@ -59,11 +63,19 @@ def main():
                 filename='best-{epoch}-{val_loss:.2f}'
             )
 
-    logger = TensorBoardLogger(save_dir=log, name=f"{args.num_epoch}epoch_{args.model_name}", version=1)
+    logger = TensorBoardLogger(save_dir=log, name=f"{args.num_epoch}_epoch_{args.model_name}", version=args.version)
 
 
     # fit the model
-    pl_trainer = Trainer(max_epochs = int(args.num_epoch), accelerator='gpu', devices=1, precision="16-mixed", default_root_dir=chk_pnt)
+    pl_trainer = Trainer(
+        max_epochs = int(args.num_epoch), 
+        accelerator='gpu', 
+        devices=1, 
+        precision=args.precision, 
+        default_root_dir=chk_pnt, 
+        callbacks=checkpoint_callback, 
+        logger=logger
+    )
     #Uncomment for Mac
     #pl_trainer = Trainer(max_epochs = 1, accelerator='cpu', devices=1, default_root_dir=EDGECNN_CHK_PNT)
     pl_trainer.fit(model, train_dataloaders=train_dataloader, val_dataloaders=val_dataloader)
@@ -72,7 +84,7 @@ def main():
     y_pred = pl_trainer.predict(model=model, dataloaders=test_dataloader)
 
     #Save the predictions
-    torch.save(y_pred, f"{chk_pnt}/lightning_logs/version_{args.version}/predictions.py")
+    torch.save(y_pred, f"{EDGECNN_PRED}/predictions{args.version}.pt")
 
 if __name__ == "__main__":
     main()
