@@ -1,4 +1,3 @@
-
 import os
 import re
 import numpy as np
@@ -54,6 +53,19 @@ def setup_directories():
         os.mkdir(path)
         print("Directory '% s' created" % directory) 
 
+def scondary_structure_parquet(sequence_path:str, read_path:str, save_path:str=None):
+    dummy_df = pl.scan_csv(sequence_path)
+    sequence_df = dummy_df.select(['sequence'])
+
+    for file in os.listdir(read_path):
+        path = os.path.join(read_path, file)
+        df = pl.scan_csv(path)
+        num_rows = df.with_row_count().collect()
+        print(num_rows, len(df.columns))
+        df = df.join(sequence_df, on='sequence', how='left')
+    #print(len(df.columns))
+    return 
+
 def to_parquet(read_path:str, save_path:str, bpp_path:str=None):
     # 📊 Read CSV data using Polars
     dummy_df = pl.scan_csv(read_path)
@@ -71,9 +83,10 @@ def to_parquet(read_path:str, save_path:str, bpp_path:str=None):
 
     df = pl.scan_csv(read_path, schema=new_schema)
     if 'SN_filter' in df.columns:
-        df = df.filter(pl.col('SN_filter') == 1) 
+        df = df.filter(pl.col('SN_filter') == 1)
         df = df.filter(pl.col('experiment_type') == 'DMS_MaP')
-    #df = df.unique(subset=["sequence_id"])
+
+    df = df.unique(subset=["sequence_id"])
     df = df.with_columns(seq_len = pl.col("sequence").str.len_bytes().alias("seq_lengths"))
     df = df.join(bpp_df, on='sequence_id', how='left')
     
@@ -131,7 +144,8 @@ if __name__ == "__main__":
     #step 1:
     #
     #setup_directories()
+    scondary_structure_parquet(sequence_path=TRAIN_CSV, read_path=SILICO_CSVS)
     #list_files_in_directory()
-    to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV)
+    #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV)
     #to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET, bpp_path=P_BPP_CSV)
     #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET_QUICK, bpp_path=P_BPP_CSV)
