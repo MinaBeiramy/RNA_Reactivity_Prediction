@@ -54,6 +54,7 @@ def setup_directories():
         print("Directory '% s' created" % directory) 
 
 def to_parquet(read_path:str, save_path:str, bpp_path:str=None, dataset_type='2a3'):
+
     # 📊 Read CSV data using Polars
     dummy_df = pl.scan_csv(read_path)
 
@@ -135,3 +136,7 @@ if __name__ == "__main__":
     #list_files_in_directory()
     to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV)
     #to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET, bpp_path=P_BPP_CSV)
+    #list_files_in_directory()
+    #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV)
+    #to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET, bpp_path=P_BPP_CSV)
+    #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET_QUICK, bpp_path=P_BPP_CSV)
