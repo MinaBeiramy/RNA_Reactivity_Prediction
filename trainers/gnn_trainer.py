@@ -10,6 +10,7 @@ class GNNTrainer(pl.LightningModule):
         model_name,
         num_channels,
         num_features,
+        batch_size,
         edge_distance=4,
         weights=None,
         learning_rate=0.001,
@@ -37,6 +38,7 @@ class GNNTrainer(pl.LightningModule):
         self.edge_distance = edge_distance
 
         self.model_name = model_name
+        self.batch_size = batch_size
 
         self.conv_reshape = []
         # models ###################
@@ -118,8 +120,8 @@ class GNNTrainer(pl.LightningModule):
         self.training_step_losses.append(loss)
         # self.training_step_accuracy.append(accuracy)
 
-        self.log("train_loss", loss, prog_bar=True, on_step=True)
-        self.log("mae", mae, prog_bar=True, on_step=True)
+        self.log("train_loss", loss, prog_bar=True, on_step=True, batch_size=self.batch_size)
+        self.log("mae", mae, prog_bar=True, on_step=True, batch_size=self.batch_size)
 
         # self.log("train_accuracy", accuracy, prog_bar=True, on_step=True)
         # self.log("train_auroc", auroc, prog_bar=False, on_step=True)
@@ -170,15 +172,8 @@ class GNNTrainer(pl.LightningModule):
         self.validation_step_losses.append(loss)
         # self.validation_step_accuracy.append(accuracy)
 
-        self.log("val_loss", loss, prog_bar=True, on_step=True)
-        self.log("mae", mae, prog_bar=True, on_step=True)
-
-        # self.log("val_accuracy", accuracy, prog_bar=True, on_step=True)
-        # self.log("val_auroc", auroc, prog_bar=False, on_step=True)
-        # self.log("val_precision", precision, prog_bar=False, on_step=True)
-        # self.log("val_recall", recall, prog_bar=False, on_step=True)
-        # self.log("val_f1", f1, prog_bar=False, on_step=True)
-        # self.log("val_specifity", specifity, prog_bar=False, on_step=True)
+        self.log("val_loss", loss, prog_bar=True, on_step=True, batch_size=self.batch_size)
+        self.log("mae", mae, prog_bar=True, on_step=True, batch_size=self.batch_size)
 
 
         return loss

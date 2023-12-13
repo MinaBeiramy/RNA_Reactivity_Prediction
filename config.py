@@ -49,14 +49,19 @@ PRED_CSV = SUBMISSIONS + '/' + "submission.csv"
 
 
 ##### CHECK POINTS AND LOGGERS
-CRNN_CHK_PNT = './experiments/crnn'
-CRNN_LOG = './experiments/crnn/logs'
+CHECK_POINTS = './experiments/checkpoints'
+LOGS = './experiments/logs'
+PREDICTIONS =  './experiments/predictions'
 
-EDGECNN_CHK_PNT = './experiments/edgecnn'
-EDGECNN_LOG = './experiments/edgecnn/logs'
+CRNN_CHK_PNT = CHECK_POINTS + '/' + "crnn"
+CRNN_LOG = LOGS + '/' + "crnn"
+CRNN_PRED = PREDICTIONS + '/' + "crnn"
 
-GRAPHORMER_CHK_PNT = './experiments/edgecnn'
-GRAPHORMER_LOG = './experiments/edgecnn/logs'
+EDGECNN_CHK_PNT = CHECK_POINTS + '/' + "edgecnn"
+EDGECNN_LOG = LOGS + '/' + "edgecnn"
+EDGECNN_PRED = PREDICTIONS + '/' + "edgecnn"
 
-##### Saving Predictions
-PREDICTION = "lightning_logs/version_0"
+
+GRAPHORMER_CHK_PNT = CHECK_POINTS + '/' + "graphormer"
+GRAPHORMER_LOG = LOGS + '/' + "graphormer"
+GRAPHORMER_PRED = PREDICTIONS + '/' + "graphormer"
