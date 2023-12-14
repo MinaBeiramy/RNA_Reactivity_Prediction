@@ -75,7 +75,8 @@ EDGECNN_2A3_CHK_PNT = CHECK_POINTS + '/' + "edgecnn" + '/' + '2a3'
 EDGECNN_DMS_CHK_PNT = CHECK_POINTS + '/' + "edgecnn" + '/' + 'dms'
 
 
-EDGECNN_LOG = LOGS + '/' + "edgecnn" + '/' + 'full'
+
+
 EDGECNN_2A3_LOG = LOGS + '/' + "edgecnn" + '/' + '2a3'
 EDGECNN_DMS_LOG = LOGS + '/' + "edgecnn" + '/' + 'dms'
 
@@ -92,3 +93,4 @@ EDGECNN_DMS_PRED = PREDICTIONS + '/' + "edgecnn" + '/' + 'dms'
 GRAPHORMER_CHK_PNT = CHECK_POINTS + '/' + "graphormer"
 GRAPHORMER_LOG = LOGS + '/' + "graphormer"
 GRAPHORMER_PRED = PREDICTIONS + '/' + "graphormer"
+
