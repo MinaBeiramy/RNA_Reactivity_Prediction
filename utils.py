@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from config import  *
 import polars as pl  # 📊 Polars for data manipulation
+from arnie.mfe import mfe
+
 
 #TODO make a script to download the data
 
@@ -53,18 +55,54 @@ def setup_directories():
         os.mkdir(path)
         print("Directory '% s' created" % directory) 
 
-def scondary_structure_parquet(sequence_path:str, read_path:str, save_path:str=None):
-    dummy_df = pl.scan_csv(sequence_path)
-    sequence_df = dummy_df.select(['sequence'])
+def calculate_secondary_structure(sequence):
+    sequence = "CGCUGUCUGUACUUGUAUCAGUACACUGACGAGUCCCUAAAGGACGAAACAGCG"
+    structure = mfe(sequence,package="eternafold")
+    print(structure)
+    return structure
 
-    for file in os.listdir(read_path):
-        path = os.path.join(read_path, file)
-        df = pl.scan_csv(path)
-        num_rows = df.with_row_count().collect()
-        print(num_rows, len(df.columns))
-        df = df.join(sequence_df, on='sequence', how='left')
-    #print(len(df.columns))
-    return 
+@pl.udf
+def calculate_secondary_structure_udf(sequence: str) -> str:
+    return calculate_secondary_structure(sequence)
+
+# def scondary_structure_parquet(sequence_path:str, read_path:str, save_path:str=None):
+#     # sequence_df = pl.scan_csv(sequence_path)
+#     # sequence_df = sequence_df.select(['sequence'])
+#     # new_schema = {}
+
+#     # for file in os.listdir(read_path):
+        
+#     #     path = os.path.join(read_path, file)
+#     #     dummy_df = pl.scan_csv(path)
+#     #     for key, value in dummy_df.schema.items():
+#     #         if key == "id":
+#     #             new_schema[key] = pl.Utf8  # 📊 Convert 'reactivity' columns to Float32
+#     #         else:            
+#     #             new_schema[key] = value
+        
+#     #     df = pl.scan_csv(path, schema=new_schema)
+#     #     num_rows = df.with_row_count().collect()
+#     #     print(num_rows, len(df.columns))
+#     #     df = df.join(sequence_df, on='sequence', how='left')
+#     parquet_file_path = "path/to/your/parquet_dataset"
+#     df = pl.read_parquet(parquet_file_path)
+
+#     # Assuming you have a function for calculating secondary structure
+#     def calculate_secondary_structure(sequence):
+#         # Your secondary structure calculation function goes here
+#         # Replace the following line with your actual function
+#         return f"SecondaryStructure({sequence})"
+
+
+
+    # # Optionally, you can write the DataFrame back to Parquet if needed
+    # output_parquet_path = "path/to/output/parquet"
+    # df.write_parquet(output_parquet_path)
+    # df.sink_parquet(
+    #     save_path,
+    #     compression='uncompressed',  # No compression for easy access
+    #     row_group_size=10,  # Adjust row group size as needed
+    # )
 
 def to_parquet(read_path:str, save_path:str, bpp_path:str=None):
     # 📊 Read CSV data using Polars
@@ -89,8 +127,10 @@ def to_parquet(read_path:str, save_path:str, bpp_path:str=None):
     df = df.unique(subset=["sequence_id"])
     df = df.with_columns(seq_len = pl.col("sequence").str.len_bytes().alias("seq_lengths"))
     df = df.join(bpp_df, on='sequence_id', how='left')
+    df = df.with_column(
+    pl.col("ethernafold_secondary_structure", calculate_secondary_structure_udf(pl.col("sequence")))
+    )
     
-
     # 💾 Write data to Parquet format with specified settings
     df.sink_parquet(
         save_path,
@@ -144,7 +184,7 @@ if __name__ == "__main__":
     #step 1:
     #
     #setup_directories()
-    scondary_structure_parquet(sequence_path=TRAIN_CSV, read_path=SILICO_CSVS)
+    scondary_structure_parquet(sequence_path=TRAIN_CSV, read_path=SILICO_CSVS, save_path=P_2ND_STRUCRURES)
     #list_files_in_directory()
     #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV)
     #to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET, bpp_path=P_BPP_CSV)
