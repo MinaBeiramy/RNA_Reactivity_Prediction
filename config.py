@@ -25,6 +25,9 @@ FORGI_BPP_FILES = PREPROSECESSED_BPPS + '/' + "forgi.pt"
 
 # In case of loading data with parquets, uncomment below:
 P_TRAIN_PARQUET = PREPROSECESSED_DATA + '/' + "p_train_data.parquet"
+P_TRAIN_2A3_PARQUET = PREPROSECESSED_DATA + '/' + "p_train_data_2a3.parquet"
+P_TRAIN_DMS_PARQUET = PREPROSECESSED_DATA + '/' + "p_train_data_dms.parquet"
+
 P_TRAIN_PARQUET_QUICK = PREPROSECESSED_DATA + '/' + "p_train_data_quick.parquet"
 P_TARGETS_PARQUET = PREPROSECESSED_DATA + '/' + "p_targets_data.parquet"
 P_BPP_PARQUET = PREPROSECESSED_DATA + '/' + "p_bpp.parquet"
@@ -53,13 +56,37 @@ CHECK_POINTS = './experiments/checkpoints'
 LOGS = './experiments/logs'
 PREDICTIONS =  './experiments/predictions'
 
-CRNN_CHK_PNT = CHECK_POINTS + '/' + "crnn"
-CRNN_LOG = LOGS + '/' + "crnn"
-CRNN_PRED = PREDICTIONS + '/' + "crnn"
+CRNN_CHK_PNT = CHECK_POINTS + '/' + "crnn" + '/' + 'full'
+CRNN_2A3_CHK_PNT = CHECK_POINTS + '/' + "crnn" + '/' + '2a3'
+CRNN_DMS_CHK_PNT = CHECK_POINTS + '/' + "crnn" + '/' + 'dms'
 
-EDGECNN_CHK_PNT = CHECK_POINTS + '/' + "edgecnn"
-EDGECNN_LOG = LOGS + '/' + "edgecnn"
-EDGECNN_PRED = PREDICTIONS + '/' + "edgecnn"
+
+CRNN_LOG = LOGS + '/' + "crnn" + '/' + 'full'
+CRNN_2A3_LOG = LOGS + '/' + "crnn" + '/' + '2a3'
+CRNN_DMS_LOG = LOGS + '/' + "crnn" + '/' + 'dms'
+
+CRNN_PRED = PREDICTIONS + '/' + "crnn" + '/' + 'full'
+CRNN_2A3_PRED = PREDICTIONS + '/' + "crnn" + '/' + '2a3'
+CRNN_DMS_PRED = PREDICTIONS + '/' + "crnn" + '/' + 'dms'
+
+
+EDGECNN_CHK_PNT = CHECK_POINTS + '/' + "edgecnn" + '/' + 'full'
+EDGECNN_2A3_CHK_PNT = CHECK_POINTS + '/' + "edgecnn" + '/' + '2a3'
+EDGECNN_DMS_CHK_PNT = CHECK_POINTS + '/' + "edgecnn" + '/' + 'dms'
+
+
+EDGECNN_LOG = LOGS + '/' + "edgecnn" + '/' + 'full'
+EDGECNN_2A3_LOG = LOGS + '/' + "edgecnn" + '/' + '2a3'
+EDGECNN_DMS_LOG = LOGS + '/' + "edgecnn" + '/' + 'dms'
+
+EDGECNN_PRED = PREDICTIONS + '/' + "edgecnn" + '/' + 'full'
+EDGECNN_2A3_PRED = PREDICTIONS + '/' + "edgecnn" + '/' + '2a3'
+EDGECNN_DMS_PRED = PREDICTIONS + '/' + "edgecnn" + '/' + 'dms'
+
+
+# EDGECNN_CHK_PNT = CHECK_POINTS + '/' + "edgecnn"
+# EDGECNN_LOG = LOGS + '/' + "edgecnn"
+# EDGECNN_PRED = PREDICTIONS + '/' + "edgecnn"
 
 
 GRAPHORMER_CHK_PNT = CHECK_POINTS + '/' + "graphormer"

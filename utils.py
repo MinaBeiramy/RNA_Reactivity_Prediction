@@ -54,7 +54,7 @@ def setup_directories():
         os.mkdir(path)
         print("Directory '% s' created" % directory) 
 
-def to_parquet(read_path:str, save_path:str, bpp_path:str=None):
+def to_parquet(read_path:str, save_path:str, bpp_path:str=None, dataset_type='2a3'):
     # 📊 Read CSV data using Polars
     dummy_df = pl.scan_csv(read_path)
 
@@ -72,7 +72,9 @@ def to_parquet(read_path:str, save_path:str, bpp_path:str=None):
     df = pl.scan_csv(read_path, schema=new_schema)
     if 'SN_filter' in df.columns:
         df = df.filter(pl.col('SN_filter') == 1) 
-        df = df.filter(pl.col('experiment_type') == 'DMS_MaP')
+        #df = df.filter(pl.col('experiment_type') == 'DMS_MaP')
+        #df = df.filter(pl.col('experiment_type') == '2A3_MaP')
+
     #df = df.unique(subset=["sequence_id"])
     df = df.with_columns(seq_len = pl.col("sequence").str.len_bytes().alias("seq_lengths"))
     df = df.join(bpp_df, on='sequence_id', how='left')
