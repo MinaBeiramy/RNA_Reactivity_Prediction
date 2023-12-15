@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from config import  *
 import polars as pl  # 📊 Polars for data manipulation
+from arnie.mfe import mfe
+
 
 #TODO make a script to download the data
 
@@ -53,7 +55,10 @@ def setup_directories():
         os.mkdir(path)
         print("Directory '% s' created" % directory) 
 
-def to_parquet(read_path:str, save_path:str, bpp_path:str=None, dataset_type='2a3'):
+def secondary_structure(seq, pakage_name='eternafold'):
+    return mfe(seq, pakage= pakage_name)
+
+def to_parquet(read_path:str, save_path:str, bpp_path:str=None, dataset_type=None):
 
     # 📊 Read CSV data using Polars
     dummy_df = pl.scan_csv(read_path)
@@ -68,16 +73,25 @@ def to_parquet(read_path:str, save_path:str, bpp_path:str=None, dataset_type='2a
             new_schema[key] = pl.Float32  # 📊 Convert 'reactivity' columns to Float32
         else:            
             new_schema[key] = value
+        if key == 'sequence':
+            new_schema[key] = pl.Utf8
 
     df = pl.scan_csv(read_path, schema=new_schema)
     if 'SN_filter' in df.columns:
-        df = df.filter(pl.col('SN_filter') == 1) 
-        #df = df.filter(pl.col('experiment_type') == 'DMS_MaP')
-        #df = df.filter(pl.col('experiment_type') == '2A3_MaP')
+        df = df.filter(pl.col('SN_filter') == 1)
+        if dataset_type == 'dms':
+            df = df.filter(pl.col('experiment_type') == 'DMS_MaP')
+        elif dataset_type == '2a3':
+            df = df.filter(pl.col('experiment_type') == '2A3_MaP')
 
     #df = df.unique(subset=["sequence_id"])
     df = df.with_columns(seq_len = pl.col("sequence").str.len_bytes().alias("seq_lengths"))
     df = df.join(bpp_df, on='sequence_id', how='left')
+    
+    df = df.with_columns(
+        ethernafold_secondary_structure=
+        (pl.col("sequence").map_batches(lambda seq: secondary_structure(seq)).alias("ethernafold_secondary_structure").cast(pl.Utf8)
+        ))
     
 
     # 💾 Write data to Parquet format with specified settings
@@ -135,7 +149,9 @@ if __name__ == "__main__":
     #setup_directories()
     #list_files_in_directory()
     to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV)
-    #to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET, bpp_path=P_BPP_CSV)
+    to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_2A3_PARQUET, bpp_path=P_BPP_CSV)
+    to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_DMS_PARQUET, bpp_path=P_BPP_CSV)
+    to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET, bpp_path=P_BPP_CSV)
     #list_files_in_directory()
     #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV)
     #to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET, bpp_path=P_BPP_CSV)
