@@ -32,6 +32,8 @@ bin/**
 obj/**
 .pytest_cache
 tmp/**
+DATA/**
+experiments/**
 .python-version
 .vs/
 test-results*.xml

@@ -28,3 +28,19 @@ in `train_config.json` , `test_config.json`
 ```
 python script.py -m {model_name:str} -e {epoch_number:int} -v {mode_vesion_ number}
 ```
+
+### Eterna installation
+Install mini-forge mamba.
+Install eterna and other dependencies. 
+```
+pip install -q --upgrade arnie 
+pip install -q --upgrade forgi
+conda install -y -q -c bioconda viennarna
+pip install -q git+https://github.com/DasLab/draw_rna.git
+
+```
+set the following env paths.
+```
+ETERNAFOLD_PATH=~/miniforge3/envs/eter/bin/eternafold-bin
+ETERNAFOLD_PARAMETERS=~/miniforge3/envs/eter/lib/eternafold-lib/parameters/EternaFoldParams.v1
+```
