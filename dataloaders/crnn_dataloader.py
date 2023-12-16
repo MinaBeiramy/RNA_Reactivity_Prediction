@@ -254,9 +254,7 @@ class InferenceParquetCRNNDataset(Dataset):
         target_mask = torch.zeros(512)
         target_mask[self.target_pad:self.target_pad + self.seq_len_row] = 1.
     
-    
-        
-        return data, target_mask
+        return data, target_mask, self.seq_len_row 
 
     def __len__(self):
         # 📏 Return the length of the dataset

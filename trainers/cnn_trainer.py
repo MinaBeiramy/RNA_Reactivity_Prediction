@@ -1,6 +1,6 @@
 import torch
 import pytorch_lightning as pl
-from torchmetrics.regression import MeanAbsoluteError
+from torchmetrics.regression import MeanAbsoluteError, MeanSquaredError
 from models.crnn import CRNN
 
 class CNNTrainer(pl.LightningModule):
@@ -11,16 +11,17 @@ class CNNTrainer(pl.LightningModule):
         learning_rate=0.001,
         weight_decay=1e-4,
         gamma=2,
-        num_classes = 223,
         num_channels = 1,
     ):
         """Initialize with pretrained weights instead of None if a pretrained model is required."""
         super().__init__()
         self.training_step_losses = []
-        self.training_step_accuracy = []
+        self.training_step_mae = []
+        self.training_step_rmse = []
 
         self.validation_step_losses = []
-        self.validation_step_accuracy = []
+        self.validation_step_mae = []
+        self.validation_step_rmse = []
 
         self.test_step_losses = []
 
@@ -28,11 +29,6 @@ class CNNTrainer(pl.LightningModule):
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
         self.gamma = gamma
-
-        if num_classes == 2:
-            self.num_classes = num_classes - 1
-        elif num_classes > 2:
-            self.num_classes = num_classes
 
         self.num_channels = num_channels
 
@@ -46,21 +42,16 @@ class CNNTrainer(pl.LightningModule):
 
         # metrics ###################
         self.mae = MeanAbsoluteError()
-        # self.f1 = F1Score(task=self.classification, num_classes=self.num_classes)
-        # self.auroc = AUROC(task=self.classification, num_classes=self.num_classes)
-        # self.recall = Recall(task=self.classification, num_classes=self.num_classes)
-        # self.accuracy = Accuracy(task=, num_classes=self.num_classes)
-        # self.precision = Precision(task=self.classification, num_classes=self.num_classes)
-        # self.specifity = Specificity(task=self.classification, num_classes=self.num_classes)
+        self.mse = MeanSquaredError()
         self.save_hyperparameters()
 
     def loss_fn(self, output, target):
         # 🪟 Clip the target values to be within the range [0, 1]
-        #clipped_target = torch.clip(target, min=0, max=1)
+        clipped_target = torch.clip(target, min=0, max=1)
         # 📉 Calculate the mean squared error loss
         
-        #mses = torch.nn.functional.l1_loss(output, clipped_target, reduction='mean')
-        mses = torch.nn.functional.l1_loss(output, target, reduction='mean')
+        mses = torch.nn.functional.mse_loss(output, clipped_target, reduction='mean')
+        #mses = torch.nn.functional.mse_loss(output, target, reduction='mean')
 
         return mses
 
@@ -73,17 +64,11 @@ class CNNTrainer(pl.LightningModule):
 
     def _metrics(self, y_pred, y_true):
         mae = self.mae(y_pred, y_true)
-    #     f1 = self.f1(y_pred, y_true)
-    #     auroc = self.auroc(y_pred, y_true)
-    #     recall = self.recall(y_pred, y_true)
-    #     precision = self.precision(y_pred, y_true)
-    #     accuracy = self.accuracy(y_pred, y_true)
-    #     specifity = self.specifity(y_pred, y_true)
-        return mae
+        rmse = torch.sqrt(self.mse(y_pred, y_true))
+        return mae, rmse
 
     def forward(self, imgs):
         output = self.model(imgs)
-        #print(output)
         return output
     
     
@@ -101,37 +86,29 @@ class CNNTrainer(pl.LightningModule):
         
 
         y_pred = self.forward(inputs)
-        y_pred = y_pred * mask.unsqueeze(-1)
-        #print(mask.unique())
-        #print(y_pred.unique())       
+        y_pred = y_pred * mask.unsqueeze(-1)   
         # loss
     
         y_true = y_true.unsqueeze(-1)
         y_true = y_true * mask.unsqueeze(-1) 
+
         loss = self.loss_fn(y_pred, y_true)
+        mae, rmse = self._metrics(y_pred, y_true)
 
-        # accuracy = self._metrics(y_pred, y_true)
-        mae = self._metrics(y_pred, y_true)
-
-        self.training_step_losses.append(loss)
-        # self.training_step_accuracy.append(accuracy)
+        self.training_step_losses.append(loss.detach().cpu())
+        self.training_step_mae.append(mae.detach().cpu())
+        self.training_step_rmse.append(rmse.detach().cpu())
 
         self.log("train_loss", loss, prog_bar=True, on_step=True)
-        self.log("mae", mae, prog_bar=True, on_step=True)
-
-        # self.log("train_accuracy", accuracy, prog_bar=True, on_step=True)
-        # self.log("train_auroc", auroc, prog_bar=False, on_step=True)
-        # self.log("train_precision", precision, prog_bar=False, on_step=True)
-        # self.log("train_recall", recall, prog_bar=False, on_step=True)
-        # self.log("train_f1", f1, prog_bar=False, on_step=True)
-        # self.log("train_specifity", specifity, prog_bar=False, on_step=True)
-
+        self.log("train_mae", mae, prog_bar=True, on_step=True)
+        self.log("train_rmse", rmse, prog_bar=True, on_step=True)
 
         return loss
 
     def on_train_epoch_end(self):
         avg_loss = torch.stack(self.training_step_losses).mean()
-        # avg_train_acc = torch.stack(self.training_step_accuracy).mean()
+        avg_mae = torch.stack(self.training_step_mae).mean()
+        avg_rmse = torch.stack(self.training_step_rmse).mean()
 
         self.log(
             "train_loss_epoch_end",
@@ -140,13 +117,21 @@ class CNNTrainer(pl.LightningModule):
             on_step=False,
             on_epoch=True,
         )
-        # self.log(
-        #     "train_acc_epoch_end",
-        #     avg_train_acc,
-        #     prog_bar=True,
-        #     on_step=False,
-        #     on_epoch=True,
-        # )
+        self.log(
+            "train_mae_epoch_end",
+            avg_mae,
+            prog_bar=True,
+            on_step=False,
+            on_epoch=True,
+        )
+        self.log(
+            "train_rmse_epoch_end",
+            avg_rmse,
+            prog_bar=True,
+            on_step=False,
+            on_epoch=True,
+        )
+
         return avg_loss
 
     def validation_step(self, batch, batch_idx):
@@ -160,29 +145,25 @@ class CNNTrainer(pl.LightningModule):
         y_true = y_true.unsqueeze(-1)
         y_true = y_true * mask.unsqueeze(-1) 
         loss = self.loss_fn(y_pred, y_true)
+        mae, rmse = self._metrics(y_pred, y_true)
 
-        # accuracy = self._metrics(y_pred, y_true)
-        mae = self._metrics(y_pred, y_true)
-
-        self.validation_step_losses.append(loss)
-        # self.validation_step_accuracy.append(accuracy)
+        self.validation_step_losses.append(loss.detach().cpu())
+        self.validation_step_mae.append(mae.detach().cpu())
+        self.validation_step_rmse.append(rmse.detach().cpu())
 
         self.log("val_loss", loss, prog_bar=True, on_step=True)
-        self.log("mae", mae, prog_bar=True, on_step=True)
+        self.log("val_mae", mae, prog_bar=True, on_step=True)
+        self.log("val_rmse", rmse, prog_bar=True, on_step=True)
 
-        # self.log("val_accuracy", accuracy, prog_bar=True, on_step=True)
-        # self.log("val_auroc", auroc, prog_bar=False, on_step=True)
-        # self.log("val_precision", precision, prog_bar=False, on_step=True)
-        # self.log("val_recall", recall, prog_bar=False, on_step=True)
-        # self.log("val_f1", f1, prog_bar=False, on_step=True)
-        # self.log("val_specifity", specifity, prog_bar=False, on_step=True)
 
 
         return loss
 
     def on_validation_epoch_end(self):
         avg_loss = torch.stack(self.validation_step_losses).mean()
-        # avg_train_acc = torch.stack(self.validation_step_accuracy).mean()
+        avg_mae = torch.stack(self.validation_step_mae).mean()
+        avg_rmse = torch.stack(self.validation_step_rmse).mean()
+
 
         self.log(
             "validation_loss_epoch_end",
@@ -191,21 +172,28 @@ class CNNTrainer(pl.LightningModule):
             on_step=False,
             on_epoch=True,
         )
-        # self.log(
-        #     "validation_acc_epoch_end",
-        #     avg_train_acc,
-        #     prog_bar=True,
-        #     on_step=False,
-        #     on_epoch=True,
-        # )
+        self.log(
+            "validation_mae_epoch_end",
+            avg_mae,
+            prog_bar=True,
+            on_step=False,
+            on_epoch=True,
+        )
+        self.log(
+            "validation_rmse_epoch_end",
+            avg_rmse,
+            prog_bar=True,
+            on_step=False,
+            on_epoch=True,
+        )
+
         return avg_loss
-
-    # This is for binaryCE loss cuz one dimension 
-
+    
     def predict_step(self, batch, batch_idx):
-        inputs, mask = batch
+        inputs, mask, seq_len = batch
         y_pred = self.forward(inputs)
         y_pred = y_pred * mask.unsqueeze(-1)
-        # if self.classification == 'binary':
-        #     y_pred = torch.nn.functional.sigmoid(y_pred)
+        pads = 512 - seq_len 
+        y_pred = y_pred[:int(pads/2) + seq_len]
+
         return y_pred
