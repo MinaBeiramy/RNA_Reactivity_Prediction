@@ -5,7 +5,7 @@ SILICO_CSVS = DATA_DIR + '/' + 'supplementary_silico_predictions'
 PREPROSECESSED_DATA = "./DATA/preprocessed"
 PREPROSECESSED_BPPS = PREPROSECESSED_DATA + '/' + 'bbps'
 ETERNA_PKG_BPP = DATA_DIR + '/' +'Ribonanza_bpp_files/extra_data'
-SUBMISSIONS = "./DATA/submissions"
+SUBMISSIONS = "./submitions"
 
 TRAIN_CSV = DATA_DIR + '/' + "train_data.csv"
 TEST_CSV = DATA_DIR + '/' + "test_sequences.csv"
@@ -33,7 +33,7 @@ P_TARGETS_PARQUET = PREPROSECESSED_DATA + '/' + "p_targets_data.parquet"
 P_BPP_PARQUET = PREPROSECESSED_DATA + '/' + "p_bpp.parquet"
 P_TEST_PARQUET = PREPROSECESSED_DATA + '/' + "p_test_data.parquet"
 
-PRED_CSV = SUBMISSIONS + '/' + "submission.csv"
+# = SUBMISSIONS + '/' + "submission.csv"
 
 
 ####### TRAIN CONFIG

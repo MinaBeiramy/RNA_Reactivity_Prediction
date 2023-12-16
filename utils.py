@@ -1,6 +1,7 @@
 import os
 import re
 import numpy as np
+import torch
 import pandas as pd
 from config import  *
 import polars as pl  # 📊 Polars for data manipulation
@@ -53,7 +54,17 @@ def setup_directories():
         os.mkdir(path)
         print("Directory '% s' created" % directory) 
 
-def to_parquet(read_path:str, save_path:str, bpp_path:str=None, dataset_type='2a3'):
+def make_submission_file(pred_dms_path, pred_2a3_path):
+    _dms = torch.load(pred_dms_path).to(torch.float32).numpy()
+    _2a3 = torch.load(pred_dms_path).to(torch.float32).numpy()
+    ids = np.arange(len(_dms), dtype=int)
+    submission_df = pl.DataFrame({"id": ids, "reactivity_DMS_MaP": _dms, "reactivity_2A3_MaP": _2a3})
+    print(submission_df.shape)
+    submission_df.write_csv(f"{SUBMISSIONS}/predictions_v1.csv")
+    #ids = np.empty(shape=(0, 1), dtype=int)
+    #preds = np.empty(shape=(0, 1), dtype=np.float32)
+
+def to_parquet(read_path:str, save_path:str, bpp_path:str=None, dataset_type:str=None):
     # 📊 Read CSV data using Polars
     dummy_df = pl.scan_csv(read_path)
 
@@ -70,14 +81,15 @@ def to_parquet(read_path:str, save_path:str, bpp_path:str=None, dataset_type='2a
 
     df = pl.scan_csv(read_path, schema=new_schema)
     if 'SN_filter' in df.columns:
-        df = df.filter(pl.col('SN_filter') == 1) 
-        #df = df.filter(pl.col('experiment_type') == 'DMS_MaP')
-        #df = df.filter(pl.col('experiment_type') == '2A3_MaP')
+        df = df.filter(pl.col('SN_filter') == 1)
+        if dataset_type is not None:
+            dt = dataset_type.upper()
+            df = df.filter(pl.col('experiment_type') == f'{dt}_MaP')
 
-    #df = df.unique(subset=["sequence_id"])
-    df = df.with_columns(seq_len = pl.col("sequence").str.len_bytes().alias("seq_lengths"))
-    df = df.join(bpp_df, on='sequence_id', how='left')
+        #df = df.unique(subset=["sequence_id"])
+        df = df.join(bpp_df, on='sequence_id', how='left')
     
+    df = df.with_columns(seq_len = pl.col("sequence").str.len_bytes().alias("seq_lengths"))
 
     # 💾 Write data to Parquet format with specified settings
     df.sink_parquet(
@@ -133,5 +145,6 @@ if __name__ == "__main__":
     #
     #setup_directories()
     #list_files_in_directory()
-    to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV)
-    #to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET, bpp_path=P_BPP_CSV)
+    #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV)
+    to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET)
+    #make_submission_file('experiments\predictions\edgecnn\dms\predictions_2.pt')
