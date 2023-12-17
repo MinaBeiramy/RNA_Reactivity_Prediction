@@ -149,6 +149,3 @@ if __name__ == "__main__":
     #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV, dataset_type='dms')
     #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV, dataset_type='2a3')
     #to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET, bpp_path=P_BPP_CSV)
-
-
-    #make_submission_file('experiments\predictions\edgecnn\dms\predictions_2.pt')
