@@ -35,6 +35,7 @@ def setup_directories():
   
     # Directory 
     directory = "DATA"
+    esperiments = 'experiments'
     
     # Parent Directory path 
     parent_dir = os.getcwd()
@@ -52,7 +53,7 @@ def setup_directories():
         # Path 
         path = os.path.join(path, directory) 
         os.mkdir(path)
-        print("Directory '% s' created" % directory) 
+        print("Directory '% s' created" % directory)
 
 def make_submission_file(pred_dms_path, pred_2a3_path):
     _dms = torch.load(pred_dms_path).to(torch.float32).numpy()
@@ -87,7 +88,7 @@ def to_parquet(read_path:str, save_path:str, bpp_path:str=None, dataset_type:str
             df = df.filter(pl.col('experiment_type') == f'{dt}_MaP')
 
         #df = df.unique(subset=["sequence_id"])
-        df = df.join(bpp_df, on='sequence_id', how='left')
+    df = df.join(bpp_df, on='sequence_id', how='left')
     
     df = df.with_columns(seq_len = pl.col("sequence").str.len_bytes().alias("seq_lengths"))
 
@@ -145,6 +146,9 @@ if __name__ == "__main__":
     #
     #setup_directories()
     #list_files_in_directory()
-    #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV)
-    to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET)
+    #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV, dataset_type='dms')
+    #to_parquet(read_path=TRAIN_CSV, save_path=P_TRAIN_PARQUET, bpp_path=P_BPP_CSV, dataset_type='2a3')
+    #to_parquet(read_path=TEST_CSV, save_path=P_TEST_PARQUET, bpp_path=P_BPP_CSV)
+
+
     #make_submission_file('experiments\predictions\edgecnn\dms\predictions_2.pt')

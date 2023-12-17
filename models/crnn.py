@@ -93,4 +93,3 @@ class CRNN(nn.Module):
         # reshape to batch, seq_length
         output = output.transpose(0, 1)
         return output  # shape: (seq_len, batch, num_class)
-    

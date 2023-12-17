@@ -17,7 +17,7 @@ def main():
     parser.add_argument('-e', '--num_epoch', help='Number of Epochs', default=50)
     parser.add_argument('-v', '--version', help='Your model version number for logging and saving')
     parser.add_argument('-b', '--batch_size', help='Batch size for train-test', default=16)
-    parser.add_argument('-p', '--precision', help='Train Precision Type', default='bf16')
+    parser.add_argument('-p', '--precision', help='Train Precision Type', default='16-mixed')
     parser.add_argument('-d', '--dataset_type', help='DMS or 2A3', required=True)
     parser.add_argument('--predict_ckpt', help='Model ckpt for prediction', default=None)
 
@@ -41,7 +41,7 @@ def main():
 
     if args.model_name == 'crnn':
         model = CNNTrainer("crnn")
-        train_val_dataset = ParquetCRNNDataset(P_TRAIN_PARQUET)
+        train_val_dataset = ParquetCRNNDataset(train_parquet)
         test_dataset = InferenceParquetCRNNDataset(P_TEST_PARQUET)
        
     # set 'high' or 'highest' for better performance but lower training speed
@@ -55,9 +55,9 @@ def main():
     if args.predict_ckpt is None:
 
         # DATALOADER
-        train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True)  
-        val_dataloader = DataLoader(val_dataset, batch_size=16, shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True)
-        test_dataloader = DataLoader(test_dataset, batch_size=16, shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True)
+        train_dataloader = DataLoader(train_dataset, batch_size=int(args.batch_size), shuffle=True, num_workers=4, persistent_workers=True, pin_memory=True)  
+        val_dataloader = DataLoader(val_dataset, batch_size=int(args.batch_size), shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True)
+        test_dataloader = DataLoader(test_dataset, batch_size=int(args.batch_size), shuffle=False, num_workers=4, persistent_workers=True, pin_memory=True)
 
         # Chose the Trainer and the model you want to train
 
@@ -100,15 +100,16 @@ def main():
         model = CNNTrainer.load_from_checkpoint(args.predict_ckpt)  
     
     #Predictions
-    y_pred = pl_trainer.predict(model=model, dataloaders=test_dataloader)
-    y_pred = torch.cat(y_pred)
-    print(len(y_pred))
-    
-    #Predictions
-    y_pred = pl_trainer.predict(model=model, dataloaders=test_dataloader)
+    y_pred, seq_lens = pl_trainer.predict(model=model, dataloaders=test_dataloader)
+    #y_pred = torch.cat(y_pred)
+    #print(len(y_pred))
 
     #Save the predictions
-    torch.save(y_pred, f"{chk_pnt}/lightning_logs/version_{args.version}/predictions.py")
+    torch.save(y_pred, f"{preds}/predictions_{args.version}.pt")
+    torch.save(seq_lens, f"{preds}/seq_lens_{args.version}.pt")
+
 
 if __name__ == "__main__":
     main()
+    # python crnn_script.py -m crnn -e 1 -v 1 -d dms -b 64 -p 16-mixed
+    # python crnn_script.py -m crnn -e 1 -v 1 -d dms --predict_ckpt "experiments\checkpoints\crnn\dms\version_1\best-epoch=0-val_loss=0.02.ckpt" -b 64 -p 16-mixed
