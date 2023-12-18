@@ -55,13 +55,13 @@ def setup_directories():
         os.mkdir(path)
         print("Directory '% s' created" % directory)
 
-def make_submission_file(pred_dms_path, pred_2a3_path):
+def make_submission_file(pred_dms_path:str, pred_2a3_path:str, submission_name:str, save_path:str=SUBMISSIONS):
     _dms = torch.load(pred_dms_path).to(torch.float32).numpy()
-    _2a3 = torch.load(pred_dms_path).to(torch.float32).numpy()
+    _2a3 = torch.load(pred_2a3_path).to(torch.float32).numpy()
     ids = np.arange(len(_dms), dtype=int)
     submission_df = pl.DataFrame({"id": ids, "reactivity_DMS_MaP": _dms, "reactivity_2A3_MaP": _2a3})
     print(submission_df.shape)
-    submission_df.write_csv(f"{SUBMISSIONS}/predictions_v1.csv")
+    submission_df.write_csv(f"{save_path}/{submission_name}.csv")
     #ids = np.empty(shape=(0, 1), dtype=int)
     #preds = np.empty(shape=(0, 1), dtype=np.float32)
 
