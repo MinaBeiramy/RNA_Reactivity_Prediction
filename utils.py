@@ -62,8 +62,6 @@ def make_submission_file(pred_dms_path:str, pred_2a3_path:str, submission_name:s
     submission_df = pl.DataFrame({"id": ids, "reactivity_DMS_MaP": _dms, "reactivity_2A3_MaP": _2a3})
     print(submission_df.shape)
     submission_df.write_csv(f"{save_path}/{submission_name}.csv")
-    #ids = np.empty(shape=(0, 1), dtype=int)
-    #preds = np.empty(shape=(0, 1), dtype=np.float32)
 
 def to_parquet(read_path:str, save_path:str, bpp_path:str=None, dataset_type:str=None):
     # 📊 Read CSV data using Polars
@@ -81,16 +79,25 @@ def to_parquet(read_path:str, save_path:str, bpp_path:str=None, dataset_type:str
             new_schema[key] = value
 
     df = pl.scan_csv(read_path, schema=new_schema)
+
+    #This if statement is only executed when train dataset is given. 'SN_filter' column is only in train dataset
     if 'SN_filter' in df.columns:
         df = df.filter(pl.col('SN_filter') == 1)
         if dataset_type is not None:
             dt = dataset_type.upper()
             df = df.filter(pl.col('experiment_type') == f'{dt}_MaP')
 
-        #df = df.unique(subset=["sequence_id"])
-    df = df.join(bpp_df, on='sequence_id', how='left')
+        num_rows = df.select(pl.count()).collect()[0,0]
+        print('Number of rows in parquet are before droping duplicates: ', num_rows)
+        df = df.unique(subset=["sequence_id"])
     
+    num_rows = df.select(pl.count()).collect()[0,0]
+    df = df.join(bpp_df, on='sequence_id', how='left')
+    print('Number of rows in parquet after join: ', num_rows)
     df = df.with_columns(seq_len = pl.col("sequence").str.len_bytes().alias("seq_lengths"))
+
+    num_rows = df.select(pl.count()).collect()[0,0]
+    print('Number of rows in parquet are: ', num_rows)
 
     # 💾 Write data to Parquet format with specified settings
     df.sink_parquet(
@@ -98,6 +105,7 @@ def to_parquet(read_path:str, save_path:str, bpp_path:str=None, dataset_type:str
         compression='uncompressed',  # No compression for easy access
         row_group_size=10,  # Adjust row group size as needed
     )
+
 
 def separate_data(csv_path:str=TRAIN_CSV, test_train_flag:str='train'):
     ## Get Clean Data For Main train.csv file
