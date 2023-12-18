@@ -139,7 +139,7 @@ class CNNTrainer(pl.LightningModule):
         # loss
         y_true = y_true.unsqueeze(-1)
         y_true = y_true * mask.unsqueeze(-1) 
-        print (y_pred.shape, y_true.shape)
+        #print (y_pred.shape, y_true.shape)
 
         loss = self.loss_fn(y_pred, y_true)
         mae, rmse = self._metrics(y_pred, y_true)
@@ -184,6 +184,7 @@ class CNNTrainer(pl.LightningModule):
     def predict_step(self, batch, batch_idx):
         inputs, mask, seq_len = batch
         y_pred = self.forward(inputs)
+        y_pred = y_pred.squeeze()
         # y_pred = y_pred * mask.reshape()
         # pads = 512 - seq_len 
         # y_pred = y_pred[int(pads/2):int(pads/2) + seq_len]

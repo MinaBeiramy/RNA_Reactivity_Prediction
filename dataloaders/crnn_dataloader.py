@@ -58,10 +58,10 @@ class CNNDataset(Dataset):
             #unavailables =  list(set(self.matrix_df['sequence_id'].to_list()) - set(self.targets['sequence_id'].to_list()))
             self.matrix_df['av'] = self.matrix_df['sequence_id'].isin(self.df["sequence_id"])
             self.matrix_df = self.matrix_df[self.matrix_df['av'] == True].drop(columns=['av'])
-            print('seq id: ', self.sequence_id_df.shape)
-            print('mamtrix: ', self.matrix_df.shape)
+            #print('seq id: ', self.sequence_id_df.shape)
+            #print('mamtrix: ', self.matrix_df.shape)
 
-            print(self.df.columns)
+            #print(self.df.columns)
 
 
 
@@ -100,8 +100,8 @@ class CNNDataset(Dataset):
         
         elif self.train_test_flag == 'test':
             self.sequence_id = self.df.iloc[idx, 1]
-            print('I am the seq id: ', self.sequence_id)
-            print('I am the path: ', self.matrix_df.loc[self.matrix_df['sequence_id'] == str(self.sequence_id), 'path'])
+            #print('I am the seq id: ', self.sequence_id)
+            #print('I am the path: ', self.matrix_df.loc[self.matrix_df['sequence_id'] == str(self.sequence_id), 'path'])
 
             self.matrix_path = self.matrix_df.loc[self.matrix_df['sequence_id'] == str(self.sequence_id), 'path'].values[0]
             self.bpp = torch.Tensor(self.load_bpp_to_nparray(self.matrix_path).astype('float32'))

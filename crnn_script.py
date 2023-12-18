@@ -8,7 +8,7 @@ from torch.utils.data import random_split, DataLoader
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
-
+import pickle
 
 def main():
     # Argparser
@@ -100,8 +100,13 @@ def main():
         model = CNNTrainer.load_from_checkpoint(args.predict_ckpt)  
     
     #Predictions
-    y_pred, seq_lens = pl_trainer.predict(model=model, dataloaders=test_dataloader)
-    #y_pred = torch.cat(y_pred)
+    
+    batches = pl_trainer.predict(model=model, dataloaders=test_dataloader)
+    y_pred = [i[0] for i in batches]
+    seq_lens = [i[1] for i in batches]
+
+    y_pred = torch.cat(y_pred)
+    seq_lens = torch.cat(seq_lens)
     #print(len(y_pred))
 
     #Save the predictions
