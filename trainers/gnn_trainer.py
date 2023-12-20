@@ -69,8 +69,9 @@ class GNNTrainer(pl.LightningModule):
         return model
 
     def _metrics(self, y_pred, y_true):
-        mae = self.mae(y_pred, y_true)
-        rmse = torch.sqrt(self.mse(y_pred, y_true))
+        clipped_targets = torch.clip(y_true, min=0, max=1)
+        mae = self.mae(y_pred, clipped_targets)
+        rmse = torch.sqrt(self.mse(y_pred, clipped_targets))
         return mae, rmse
 
     def  forward(self, inputs):

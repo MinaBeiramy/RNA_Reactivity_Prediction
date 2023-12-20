@@ -114,9 +114,14 @@ def main():
     #Save the predictions
     torch.save(y_pred, f"{preds}/predictions_{args.version}.pt")
 
+    # make submission file 
+
 if __name__ == "__main__":
     main()
-    make_submission_file(
-       '.\experiments\predictions\edgecnn\dms\predictions_1.pt',
-       '.\experiments\predictions\edgecnn\2a3\predictions_1.pt'
-    )
+    # make_submission_file(
+    #    '.\experiments\predictions\edgecnn\dms\predictions_1.pt',
+    #    '.\experiments\predictions\edgecnn\2a3\predictions_1.pt'
+    # )
+
+    # launch edge cnn dms training 
+    # python gnn_script.py -m edgecnn -b 64 -v 1 -e 50 -d dms
